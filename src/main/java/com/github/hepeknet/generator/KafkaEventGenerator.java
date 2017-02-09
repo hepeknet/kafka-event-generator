@@ -74,7 +74,7 @@ public class KafkaEventGenerator {
 		producerProps.put("value.serializer", "io.confluent.kafka.serializers.KafkaAvroSerializer");
 		producerProps.put("key.serializer", "io.confluent.kafka.serializers.KafkaAvroSerializer");
 		producerProps.put("schema.registry.url", handler.getSchemaRegistryAddress());
-		try (KafkaProducer<Object, Object> producer = new KafkaProducer(producerProps)) {
+		try (KafkaProducer<Object, Object> producer = new KafkaProducer<Object, Object>(producerProps)) {
 			final AvroDataGenerator valuesGenerator = new AvroDataGenerator(valueSchemaJson);
 			AvroDataGenerator keysGenerator = null;
 			if (keySchemaJson != null) {

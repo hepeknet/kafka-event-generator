@@ -18,6 +18,14 @@ public class Main {
 		if (args.length > 2) {
 			topicName = args[2];
 		}
+		int enteredEventsPerSecond = -1;
+		if (args.length > 3) {
+			enteredEventsPerSecond = Integer.parseInt(args[3]);
+		}
+		int enteredDuration = -1;
+		if (args.length > 4) {
+			enteredDuration = Integer.parseInt(args[4]);
+		}
 		final SchemaRegistryHandler regHandler = new SchemaRegistryHandler(sr);
 		final Set<TopicWithSchema> topicsWithSchema = regHandler.getTopicsWithAssignedSchema();
 		if (topicsWithSchema.isEmpty()) {
@@ -25,8 +33,11 @@ public class Main {
 			return;
 		}
 		final Set<String> topicNames = topicsWithSchema.stream().map(tws -> tws.getTopicName()).collect(Collectors.toSet());
+		if (!StringUtil.isEmpty(topicName) && !topicNames.contains(topicName)) {
+			printMessage("The topic you entered " + topicName + " does not have associated schema. Switching to exploratory mode!");
+		}
 		while (!topicNames.contains(topicName)) {
-			System.out.println("Topics with assigned schemas are [" + Arrays.toString(topicNames.toArray()) + "]. Please enter one of these values:");
+			printMessage("Topics with assigned schemas are [" + Arrays.toString(topicNames.toArray()) + "]. Please enter one of these values:");
 			topicName = System.console().readLine();
 			if (StringUtil.isEmpty(topicName)) {
 				System.out.println("Exiting...");
@@ -36,7 +47,19 @@ public class Main {
 		final String chosenTopicName = topicName;
 		final TopicWithSchema chosenTopicWithSchema = topicsWithSchema.stream().filter(tws -> tws.getTopicName().equals(chosenTopicName)).findFirst().get();
 		final KafkaEventGenerator keg = new KafkaEventGenerator(sr, kb, chosenTopicWithSchema);
+		if (enteredEventsPerSecond > 0) {
+			keg.setEventsPerSecond(enteredEventsPerSecond);
+		}
+		if (enteredDuration > 0) {
+			keg.setDurationSeconds(enteredDuration);
+		}
 		keg.generateAndSend();
+	}
+
+	private static void printMessage(String msg) {
+		System.out.println("==========================");
+		System.out.println(msg);
+		System.out.println();
 	}
 
 }
