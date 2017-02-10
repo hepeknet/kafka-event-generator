@@ -7,11 +7,14 @@ Both key and value schemas are supported.
 ## Requirements
 
 Java 1.8+
+
 Maven 3+
 
 ## How to build
 
+~~~~
 mvn clean package
+~~~~
 
 ## How to run
 

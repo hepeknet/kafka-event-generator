@@ -44,7 +44,7 @@ public class Main {
 			printMessage("The topic you entered " + topicName + " does not have associated schema. Switching to exploratory mode!");
 		}
 		while (!topicNames.contains(topicName)) {
-			printMessage("Topics with assigned schemas are [" + Arrays.toString(topicNames.toArray()) + "]. Please enter one of these values:");
+			printMessage("Topics with assigned schemas are [" + Arrays.toString(topicNames.toArray()) + "].\nPlease enter one of these values:");
 			topicName = System.console().readLine();
 			if (StringUtil.isEmpty(topicName)) {
 				System.out.println("Exiting...");
