@@ -12,8 +12,8 @@ public class Main {
 		if (args == null || args.length < MIN_REQUIRED_ARGS) {
 			throw new IllegalArgumentException("Not all required arguments were passed! Aborting...");
 		}
-		final String sr = args[0];
-		final String[] kb = args[1].split(",");
+		final String schemaRegAddress = args[0];
+		final String[] kafkaBrokerAddresses = args[1].split(",");
 		String topicName = "";
 		if (args.length > 2) {
 			topicName = args[2];
@@ -26,10 +26,17 @@ public class Main {
 		if (args.length > 4) {
 			enteredDuration = Integer.parseInt(args[4]);
 		}
-		final SchemaRegistryHandler regHandler = new SchemaRegistryHandler(sr);
-		final Set<TopicWithSchema> topicsWithSchema = regHandler.getTopicsWithAssignedSchema();
+		final SchemaRegistryHandler regHandler = new SchemaRegistryHandler(schemaRegAddress);
+		Set<TopicWithSchema> topicsWithSchema = null;
+		try {
+			topicsWithSchema = regHandler.getTopicsWithAssignedSchema();
+		} catch (final Exception exc) {
+			printMessage("Was not able to find topics with schema using schema registry [" + schemaRegAddress + "]");
+			exc.printStackTrace();
+			return;
+		}
 		if (topicsWithSchema.isEmpty()) {
-			System.err.println("Did not find any topics with assigned schemas at [" + sr + "]!");
+			System.err.println("Did not find any topics with assigned schemas at [" + schemaRegAddress + "]!");
 			return;
 		}
 		final Set<String> topicNames = topicsWithSchema.stream().map(tws -> tws.getTopicName()).collect(Collectors.toSet());
@@ -45,8 +52,9 @@ public class Main {
 			}
 		}
 		final String chosenTopicName = topicName;
+		printMessage("Will send messages to topic [" + topicName + "]");
 		final TopicWithSchema chosenTopicWithSchema = topicsWithSchema.stream().filter(tws -> tws.getTopicName().equals(chosenTopicName)).findFirst().get();
-		final KafkaEventGenerator keg = new KafkaEventGenerator(sr, kb, chosenTopicWithSchema);
+		final KafkaEventGenerator keg = new KafkaEventGenerator(schemaRegAddress, kafkaBrokerAddresses, chosenTopicWithSchema);
 		if (enteredEventsPerSecond > 0) {
 			keg.setEventsPerSecond(enteredEventsPerSecond);
 		}
@@ -57,6 +65,7 @@ public class Main {
 	}
 
 	private static void printMessage(String msg) {
+		System.out.println();
 		System.out.println("==========================");
 		System.out.println(msg);
 		System.out.println();

@@ -1,5 +1,7 @@
 package com.github.hepeknet.generator;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
@@ -31,6 +33,11 @@ public class KafkaEventGenerator {
 		if (StringUtil.isEmpty(schemaRegistryAddress)) {
 			throw new IllegalArgumentException("Schema registry address must be provided");
 		}
+		try {
+			new URL(schemaRegistryAddress);
+		} catch (final MalformedURLException e) {
+			throw new IllegalArgumentException("Schema registry address [" + schemaRegistryAddress + "] is not valid URL!");
+		}
 		if (kafkaBrokerAddresses == null || kafkaBrokerAddresses.length == 0) {
 			throw new IllegalArgumentException("Kafka broker addresses must be provided");
 		}
@@ -52,15 +59,16 @@ public class KafkaEventGenerator {
 
 	public void generateAndSend() throws Exception {
 		log.debug("kafka broker addresses: {}", Arrays.toString(kafkaBrokerAddresses));
-		log.debug("Generating " + eventsPerSecond + " events per second and sending them to topic " + topicWithSchema + ". Will do this for " + durationSeconds
-				+ " seconds!");
+		log.debug("Generating {} events per second and sending them to topic {}. Will do this for {} seconds!", eventsPerSecond, topicWithSchema,
+				durationSeconds);
 		final TopicSchemas schemas = handler.getSchemaForTopicByName(topicWithSchema);
 		final String valueSchemaJson = new JSONObject(schemas.getValueSchema()).getString("schema");
 		String keySchemaJson = null;
 		if (schemas.getKeySchema() != null) {
 			keySchemaJson = new JSONObject(schemas.getKeySchema()).getString("schema");
 		}
-		log.debug("For topic {} found schemas {}", topicWithSchema.getTopicName(), schemas);
+		final String topicName = topicWithSchema.getTopicName();
+		log.debug("For topic {} found schemas {}", topicName, schemas);
 		final Properties producerProps = new Properties();
 		final StringBuilder sb = new StringBuilder();
 		for (int i = 0; i < kafkaBrokerAddresses.length; i++) {
@@ -78,7 +86,10 @@ public class KafkaEventGenerator {
 			final AvroDataGenerator valuesGenerator = new AvroDataGenerator(valueSchemaJson);
 			AvroDataGenerator keysGenerator = null;
 			if (keySchemaJson != null) {
+				log.debug("Topic [{}] has key schema defined", topicName);
 				keysGenerator = new AvroDataGenerator(keySchemaJson);
+			} else {
+				log.debug("Topic [{}] does not have key schema defined", topicName);
 			}
 			for (int i = 0; i < durationSeconds; i++) {
 				final List<GenericRecord> values = valuesGenerator.generateRandomRecords(eventsPerSecond);
@@ -89,17 +100,17 @@ public class KafkaEventGenerator {
 				for (int j = 0; j < eventsPerSecond; j++) {
 					ProducerRecord<Object, Object> rec = null;
 					if (keys == null) {
-						rec = new ProducerRecord<Object, Object>(topicWithSchema.getTopicName(), values.get(j));
+						rec = new ProducerRecord<Object, Object>(topicName, values.get(j));
 					} else {
-						rec = new ProducerRecord<Object, Object>(topicWithSchema.getTopicName(), keys.get(j), values.get(j));
+						rec = new ProducerRecord<Object, Object>(topicName, keys.get(j), values.get(j));
 					}
 					producer.send(rec);
 				}
-				log.info("Finished sending {} events in batch {} to topic {}", eventsPerSecond, i, topicWithSchema.getTopicName());
+				log.info("Finished sending {} events in batch {} to topic {}", eventsPerSecond, i, topicName);
 				TimeUnit.SECONDS.sleep(1);
 			}
 		}
-		log.info("Successfully sent {} events to topic {}", (eventsPerSecond * durationSeconds), topicWithSchema.getTopicName());
+		log.info("Successfully sent {} events to topic {}", (eventsPerSecond * durationSeconds), topicName);
 	}
 
 }

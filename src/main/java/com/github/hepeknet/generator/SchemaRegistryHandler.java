@@ -23,6 +23,7 @@ public class SchemaRegistryHandler {
 	}
 
 	public Set<TopicWithSchema> getTopicsWithAssignedSchema() {
+		log.debug("Schema registry address is [{}]", schemaRegistryAddress);
 		final String response = HttpUtil.executeGetRequest(schemaRegistryAddress + "/subjects");
 		log.debug("Got topics with schema {}", response);
 		final JSONArray arr = new JSONArray(response);
@@ -60,8 +61,10 @@ public class SchemaRegistryHandler {
 		log.debug("Looking for schemas associated with topic {}", tws);
 		String keySchemaUrl = null;
 		final String valueSchemaUrl = String.format("%s/subjects/%s-value/versions/latest", schemaRegistryAddress, tws.getTopicName());
+		log.debug("Value schema url is [{}]", valueSchemaUrl);
 		if (tws.isHasKeySchema()) {
 			keySchemaUrl = String.format("%s/subjects/%s-key/versions/latest", schemaRegistryAddress, tws.getTopicName());
+			log.debug("Key schema url is [{}]", keySchemaUrl);
 		}
 		final String valueSchemaJson = HttpUtil.executeGetRequest(valueSchemaUrl);
 		log.debug("Found value schema for {}", tws.getTopicName());
