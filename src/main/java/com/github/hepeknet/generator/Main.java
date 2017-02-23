@@ -10,7 +10,8 @@ public class Main {
 
 	public static void main(String[] args) throws Exception {
 		if (args == null || args.length < MIN_REQUIRED_ARGS) {
-			throw new IllegalArgumentException("Not all required arguments were passed! Aborting...");
+			System.err.println("Not all required arguments were passed! Aborting...");
+			System.exit(-1);
 		}
 		final String schemaRegAddress = args[0];
 		final String[] kafkaBrokerAddresses = args[1].split(",");
@@ -31,12 +32,12 @@ public class Main {
 		try {
 			topicsWithSchema = regHandler.getTopicsWithAssignedSchema();
 		} catch (final Exception exc) {
-			printMessage("Was not able to find topics with schema using schema registry [" + schemaRegAddress + "]");
+			printMessage("Was not able to find topics with associated schema using schema registry [" + schemaRegAddress + "]");
 			exc.printStackTrace();
 			return;
 		}
 		if (topicsWithSchema.isEmpty()) {
-			System.err.println("Did not find any topics with assigned schemas at [" + schemaRegAddress + "]!");
+			System.err.println("Did not find any topics with associated schemas at [" + schemaRegAddress + "]!");
 			return;
 		}
 		final Set<String> topicNames = topicsWithSchema.stream().map(tws -> tws.getTopicName()).collect(Collectors.toSet());
