@@ -20,14 +20,22 @@ public class AvroDataGeneratorTest {
 	}
 
 	@Test
-	public void testSimple() {
+	public void testSimpleRecord() {
 		final String schema = "{\"type\":\"record\",\"name\":\"simple\",\"fields\":[{\"name\":\"s1\",\"type\":\"string\"}]}";
 		final AvroDataGenerator gen = new AvroDataGenerator(schema);
-		final GenericRecord rec = gen.generateRandomRecord();
+		final GenericRecord rec = (GenericRecord) gen.generateRandomRecord();
 		assertNotNull(rec);
 		assertEquals("simple", rec.getSchema().getName());
 		assertNotNull(rec.get("s1"));
 		assertTrue(rec.get("s1") instanceof String);
 	}
+	
+	@Test
+  public void testSimpleType() {
+    final String schema = "{\"type\":\"string\", \"name\":\"f1\"}";
+    final AvroDataGenerator gen = new AvroDataGenerator(schema);
+    final String rec = (String) gen.generateRandomRecord();
+    assertNotNull(rec);
+  }
 
 }

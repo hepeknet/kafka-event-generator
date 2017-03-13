@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.avro.generic.GenericRecord;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.json.JSONObject;
@@ -92,8 +91,8 @@ public class KafkaEventGenerator {
 				log.debug("Topic [{}] does not have key schema defined", topicName);
 			}
 			for (int i = 0; i < durationSeconds; i++) {
-				final List<GenericRecord> values = valuesGenerator.generateRandomRecords(eventsPerSecond);
-				List<GenericRecord> keys = null;
+				final List<Object> values = valuesGenerator.generateRandomRecords(eventsPerSecond);
+				List<Object> keys = null;
 				if (keysGenerator != null) {
 					keys = keysGenerator.generateRandomRecords(eventsPerSecond);
 				}
